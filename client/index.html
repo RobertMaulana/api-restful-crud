@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Memo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <form id="form-new-memo">
+      <label for=judul_memo"">Judul Memo</label><br>
+      <input type="text" name="judul_memo" value="" id="judul_memo"><br>
+      <label for="isi_memo">Isi Memo</label><br>
+      <input type="text" name="isi_memo" value="" id="isi_memo"><br>
+      <button type="button" id="submit">Save</button>
+    </form>
+    <div id="data-memo">
+      <ul class="data-memo"></ul>
+    </div>
+    <form id="form-edit-memo">
+      <label for=judul_memo_edit"">Judul Memo</label><br>
+      <input type="text" name="judul_memo_edit" value="" id="judul_memo_edit"><br>
+      <label for="isi_memo_edit">Isi Memo</label><br>
+      <input type="text" name="isi_memo_edit" value="" id="isi_memo_edit"><br>
+      <input type="hidden" name="id_memo" value="" id="id_memo">
+      <button type="button" id="submit_edit_memo">Save</button>
+    </form>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        $("#form-edit-memo").hide()
+        $.ajax({
+          url: "http://localhost:3000/memo",
+          method: "get",
+          success: function(data){
+            data.forEach(function(memo){
+              $(".data-memo").append("<li>"+memo.judul_memo+" "+memo.isi_memo+"</li><button id='update' onclick='update("+memo.id+")'>Edit</button><a href='#' id='remove' onclick='remove("+memo.id+")'>Delete</a>")
+            })
+          }
+        })
+      })
+
+      $("#submit_edit_memo").on("click", function(){
+        let judul_memo = $("#judul_memo_edit").val()
+        let isi_memo_edit = $("#isi_memo_edit").val()
+        let id_memo = $("#id_memo").val()
+        $.ajax({
+          url: "http://localhost:3000/memo/update",
+          method: "post",
+          data: {judul_memo: judul_memo, isi_memo: isi_memo_edit, id_memo: id_memo},
+          success: function(data){
+            window.location.reload()
+          }
+        })
+      })
+
+
+      function remove(id) {
+        let conf = confirm("Are you sure?")
+        if (conf) {
+          $.ajax({
+            url: "http://localhost:3000/memo/remove/"+id,
+            method: "get",
+            success: function(data){
+              window.location.reload()
+            }
+          })
+        }else {
+          return false;
+        }
+      }
+
+      function update(id){
+        $.ajax({
+          url: "http://localhost:3000/memo/edit/"+id,
+          method: "get",
+          success: function(data){
+            $("#form-edit-memo").show()
+            $("#judul_memo_edit").val(data.judul_memo)
+            $("#isi_memo_edit").val(data.isi_memo)
+            $("#id_memo").val(data.id)
+
+          }
+        })
+      }
+
+      $("#submit").on("click", function(){
+        let data = $("#form-new-memo").serialize().split("&");
+        let judul_memo = data[0].split("=");
+        let isi_memo = data[1].split("=")
+        $.ajax({
+          url: "http://localhost:3000/memo",
+          method: "post",
+          data: {judul_memo: judul_memo[1], isi_memo: isi_memo[1]},
+          success: function(data){
+            $("#judul_memo").val("")
+            $("#isi_memo").val("")
+            $(".data-memo").prepend("<li>"+data.judul_memo+" "+data.isi_memo+"</li><button id='update' onclick='update("+data.id+")'>Edit</button><a href='#' id='remove' onclick='remove("+data.id+")'>Delete</a>")
+          }
+        })
+      })
+    </script>
+  </body>
+</html>
